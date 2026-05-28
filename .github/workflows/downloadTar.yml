@@ -16,14 +16,15 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          envs: GITHUB_TOKEN
+          # Pasamos tanto el token como el nombre del repositorio al servidor
+          envs: GITHUB_TOKEN, REPO_NAME
           script: |
             cd ~/proyectos
             
-            # Descargar usando la URL correcta de la API (Copia esta línea exactamente)
+            # Ahora usamos la variable de entorno de Linux ($REPO_NAME) en lugar de las llaves de GitHub
             curl -L -H "Authorization: Bearer $GITHUB_TOKEN" \
               -o repo.tar.gz \
-              "https://github.com/{{ github.repository }}/tarball/main"
+              "https://github.com/$REPO_NAME/tarball/main"
             
             # Descomprimir con la herramienta nativa de Ubuntu
             tar -xzf repo.tar.gz --strip-components=1
@@ -32,3 +33,4 @@ jobs:
             rm repo.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: ${{ github.repository }}
