@@ -1,0 +1,35 @@
+name: Deploy TAR to Server (Private Repo)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and Extract TAR via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          envs: GITHUB_TOKEN
+          script: |
+            cd ~/proyectos
+            
+            # Descargar el archivo .tar.gz nativo usando la API de GitHub
+            curl -L -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -o repo.tar.gz \
+              "https://github.com{{ github.repository }}/tarball/main"
+            
+            # Descomprimir usando 'tar' (Herramienta nativa de Ubuntu)
+            # --strip-components=1 elimina la carpeta interna que genera GitHub automáticamente
+            tar -xzf repo.tar.gz --strip-components=1
+            
+            # Eliminar el archivo temporal
+            rm repo.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
